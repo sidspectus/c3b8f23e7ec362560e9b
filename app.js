@@ -58,7 +58,7 @@ app.get("/api/users/:id", (req, res) => {
 
 app.put("/api/users/:id", (req, res) => {
     User.findOneAndUpdate({ _id: req.params.id }, 
-        { 
+        {
             firstname: req.params.firstname, 
             lastname: req.params.lastname, 
             email: req.params.email
@@ -67,6 +67,33 @@ app.put("/api/users/:id", (req, res) => {
 
 app.delete("/api/users/:id", (req, res) => {
     User.findOneAndDelete({_id: req.params.id});
+});
+
+app.get("/api/typeahead", (req, res) => {
+    let q = req.query.input;
+    
+    let query = {
+        "$or": [
+            {"name.firstname": {"$regex": q, "$options": "i"}}, 
+            {"name.lastname": {"$regex": q, "$options": "i"}},
+            {"name.email": {"$regex": q, "$options": "i"}}
+        ]
+    };
+
+    User.find(query).then( usrs => {
+        if(usrs && usrs.length && usrs.length > 0) {
+            usrs.forEach(user => {
+              let obj = {
+                id: user.name.first + ' ' + user.name.last + ' ' + user.name.email,
+                label: user.name.first + ' ' + user.name.last + ' ' + user.name.email
+              };
+              output.push(obj);
+            });
+        }
+        res.json(output);
+    }).catch(err => {
+        res.sendStatus(404);
+    });
 });
 
 io.on("connection", (socket) => {
