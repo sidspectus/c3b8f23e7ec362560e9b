@@ -57,16 +57,30 @@ app.get("/api/users/:id", (req, res) => {
 });
 
 app.put("/api/users/:id", (req, res) => {
-    User.findOneAndUpdate({ _id: req.params.id }, 
+    User.findOneAndUpdate({ _id: req.params.id}, 
         {
-            firstname: req.params.firstname, 
-            lastname: req.params.lastname, 
-            email: req.params.email
-        });
+            firstname: req.body.firstname, 
+            lastname: req.body.lastname, 
+            email: req.body.email
+        }, (err, result) => {
+            if(err) {
+                console.log("Error in update: "+ err)
+            } else {
+                console.log(result);
+            }
+        }
+        );
 });
 
 app.delete("/api/users/:id", (req, res) => {
-    User.findOneAndDelete({_id: req.params.id});
+    User.findOneAndDelete
+    ({ _id: req.params.id},  (err, result) => {
+        if(err) {
+            console.log("Error in update: "+ err)
+        } else {
+            console.log(result);
+        }
+    });
 });
 
 app.get("/api/typeahead", (req, res) => {
