@@ -3,7 +3,6 @@ var bodyParser = require('body-parser')
 const { Socket } = require('dgram')
 var app = express()
 var http = require('http').Server(app)
-var io = require('socket.io')(http)
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var autoIncrement = require('mongoose-auto-increment');
@@ -26,23 +25,19 @@ var userSchema = new Schema({
 userSchema.plugin(autoIncrement.plugin, 'User');
 var User = connection.model('User', userSchema)
 
+//Get All Users
 app.get("/api/users", (req, res) => {
     User.find({}, (err, user) => {
         res.send(user)
     })
 });
 
+//Add New User
 app.post("/api/users", async (req, res) => {
     try {
         console.log("Message Body", req.body)
         var  user = new User(req.body)
-
-        //Async Await
-    
-        var saveMessage = await user.save()
-        console.log("Message Saved")
-        io.emit("message", req.body)
-        
+        await user.save()
         res.sendStatus(200)
     } catch (error) {
         res.sendStatus(500)
@@ -50,12 +45,14 @@ app.post("/api/users", async (req, res) => {
     }
 });
 
+//Get Single User
 app.get("/api/users/:id", (req, res) => {
     User.findById(req.params.id, (err, user) => {
         res.send(user)
     })
 });
 
+//Update User
 app.put("/api/users/:id", (req, res) => {
     User.findOneAndUpdate({ _id: req.params.id}, 
         {
@@ -66,23 +63,25 @@ app.put("/api/users/:id", (req, res) => {
             if(err) {
                 console.log("Error in update: "+ err)
             } else {
-                console.log(result);
+                res.send(result)
             }
         }
         );
 });
 
+//Delete User
 app.delete("/api/users/:id", (req, res) => {
     User.findOneAndDelete
     ({ _id: req.params.id},  (err, result) => {
         if(err) {
             console.log("Error in update: "+ err)
         } else {
-            console.log(result);
+            res.send(result)
         }
     });
 });
 
+//Typeahead
 app.get("/api/typeahead", (req, res) => {
     let q = req.query.input;
     
@@ -108,10 +107,6 @@ app.get("/api/typeahead", (req, res) => {
     }).catch(err => {
         res.sendStatus(404);
     });
-});
-
-io.on("connection", (socket) => {
-    console.log("User Connected");
 });
 
 http.listen(8103, () => {
